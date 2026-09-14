@@ -130,7 +130,7 @@ async function init() {
     : '<div class="photo-empty">Фото пока не загружено</div>';
 
   const linkDefs = [
-    ['photo', 'Все фото объекта'],
+    ['photoFolder', 'Все фото объекта'],
     ['video', 'Видео объекта'],
     ['presentation', 'Презентация комплекса']
   ];
@@ -150,9 +150,18 @@ async function init() {
 
   document.getElementById('info-text').textContent = obj.text;
 
+  const copyBlocks = [
+    ['📸 Фото:', obj.photoFolder],
+    ['🎥 Видео:', obj.video],
+    ['🔗 Презентация:', obj.presentation]
+  ]
+    .filter(([, url]) => url)
+    .map(([label, url]) => label + '\n' + url);
+  const fullText = [obj.text].concat(copyBlocks).join('\n\n');
+
   document.getElementById('copy-btn').addEventListener('click', function () {
     const btn = this;
-    navigator.clipboard.writeText(obj.text).then(function () {
+    navigator.clipboard.writeText(fullText).then(function () {
       btn.textContent = 'Скопировано';
       setTimeout(function () { btn.textContent = 'Скопировать текст'; }, 1500);
     }).catch(function () {
