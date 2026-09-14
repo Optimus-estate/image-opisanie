@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Optimus Estate — карточка объекта</title>
+<style>
+  :root {
+    --navy: #1C2B4B;
+    --gold: #C9A24B;
+    --text: #2C2C2A;
+    --muted: #6b6a66;
+    --border: #e7e4dc;
+    --bg: #f7f5f0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: #fff;
+  }
+  .topbar {
+    background: var(--navy);
+    color: #fff;
+    padding: 14px 20px;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+  }
+  .topbar b { color: var(--gold); font-weight: 600; }
+  .photo {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    display: block;
+    background: var(--border);
+  }
+  .photo-empty {
+    width: 100%;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--border);
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .content { padding: 20px; }
+  .title {
+    font-size: 19px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: var(--navy);
+  }
+  .info-text {
+    font-size: 15px;
+    line-height: 1.7;
+    white-space: pre-line;
+    margin: 0 0 18px;
+  }
+  .links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .links a {
+    color: var(--navy);
+    text-decoration: none;
+    font-size: 14px;
+    padding: 10px 12px;
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .links a:active { background: var(--bg); }
+  .copy-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--gold);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .copy-btn:active { opacity: 0.9; }
+  .state-msg {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="topbar">Optimus <b>Estate</b></div>
+  <div class="state-msg">Загрузка…</div>
+</div>
+
+<script>
+async function init() {
+  const app = document.getElementById('app');
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+
+  if (!id) {
+    app.innerHTML = '<div class="topbar">Optimus <b>Estate</b></div><div class="state-msg">Ссылка неполная — не указан объект.</div>';
+    return;
+  }
+
+  let data;
+  try {
+    const res = await fetch('objects.json');
+    data = await res.json();
+  } catch (e) {
+    app.innerHTML = '<div class="topbar">Optimus <b>Estate</b></div><div class="state-msg">Не удалось загрузить данные объекта.</div>';
+    return;
+  }
+
+  const obj = data.find(o => o.id === id);
+  if (!obj) {
+    app.innerHTML = '<div class="topbar">Optimus <b>Estate</b></div><div class="state-msg">Объект не найден.</div>';
+    return;
+  }
+
+  const photoHtml = obj.photo
+    ? '<img class="photo" src="' + obj.photo + '" alt="">'
+    : '<div class="photo-empty">Фото пока не загружено</div>';
+
+  const linkDefs = [
+    ['photo', 'Все фото объекта'],
+    ['video', 'Видео объекта'],
+    ['presentation', 'Презентация комплекса']
+  ];
+  const linksHtml = linkDefs
+    .filter(([key]) => obj[key])
+    .map(([key, label]) => '<a href="' + obj[key] + '" target="_blank" rel="noopener">' + label + '</a>')
+    .join('');
+
+  app.innerHTML =
+    '<div class="topbar">Optimus <b>Estate</b></div>' +
+    photoHtml +
+    '<div class="content">' +
+      '<p class="title">' + obj.title + '</p>' +
+      '<p class="info-text" id="info-text"></p>' +
+      '<div class="links">' + linksHtml + '</div>' +
+      '<button class="copy-btn" id="copy-btn">Скопировать текст</button>' +
+    '</div>';
+
+  document.getElementById('info-text').textContent = obj.text;
+
+  document.getElementById('copy-btn').addEventListener('click', function () {
+    const btn = this;
+    navigator.clipboard.writeText(obj.text).then(function () {
+      btn.textContent = 'Скопировано';
+      setTimeout(function () { btn.textContent = 'Скопировать текст'; }, 1500);
+    }).catch(function () {
+      btn.textContent = 'Не удалось скопировать';
+    });
+  });
+}
+init();
+</script>
+</body>
+</html>
