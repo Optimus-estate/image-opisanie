@@ -142,12 +142,14 @@ async function init() {
   app.innerHTML =
     photoHtml +
     '<div class="content">' +
+      '<p class="title">' + obj.title + '</p>' +
       '<p class="info-text" id="info-text"></p>' +
       '<div class="links">' + linksHtml + '</div>' +
-      '<button class="copy-btn" id="copy-btn">Скопировать информацию об объекте</button>' +
+      '<button class="copy-btn" id="copy-btn">Скопировать текст</button>' +
     '</div>';
 
-  document.getElementById('info-text').textContent = obj.text;
+  const coreText = obj.text.split(/\n*📸\s*Фото:/)[0].trim();
+  document.getElementById('info-text').textContent = coreText;
 
   const copyBlocks = [
     ['📸 Фото:', obj.photoFolder],
@@ -156,7 +158,7 @@ async function init() {
   ]
     .filter(([, url]) => url)
     .map(([label, url]) => label + '\n' + url);
-  const fullText = [obj.text].concat(copyBlocks).join('\n\n');
+  const fullText = [coreText].concat(copyBlocks).join('\n\n');
 
   document.getElementById('copy-btn').addEventListener('click', function () {
     const btn = this;
