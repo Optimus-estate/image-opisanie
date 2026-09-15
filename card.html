@@ -25,6 +25,7 @@
     margin: 0 auto;
     min-height: 100vh;
     background: #fff;
+    padding-top: 16px;
   }
   .photo {
     width: 100%;
@@ -44,17 +45,15 @@
     font-size: 13px;
   }
   .content { padding: 20px; }
-  .title {
-    font-size: 19px;
-    font-weight: 600;
-    margin: 0 0 12px;
-    color: var(--navy);
-  }
   .info-text {
     font-size: 15px;
     line-height: 1.7;
     white-space: pre-line;
     margin: 0 0 18px;
+  }
+  .info-text a {
+    color: var(--navy);
+    text-decoration: underline;
   }
   .links {
     display: flex;
@@ -142,14 +141,19 @@ async function init() {
   app.innerHTML =
     photoHtml +
     '<div class="content">' +
-      '<p class="title">' + obj.title + '</p>' +
       '<p class="info-text" id="info-text"></p>' +
       '<div class="links">' + linksHtml + '</div>' +
       '<button class="copy-btn" id="copy-btn">Скопировать текст</button>' +
     '</div>';
 
   const coreText = obj.text.split(/\n*📸\s*Фото:/)[0].trim();
-  document.getElementById('info-text').textContent = coreText;
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function linkify(str) {
+    return escapeHtml(str).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  }
+  document.getElementById('info-text').innerHTML = linkify(coreText);
 
   const copyBlocks = [
     ['📸 Фото:', obj.photoFolder],
