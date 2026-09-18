@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Отчёт по объекту</title>
+<style>
+  :root {
+    --navy: #1C2B4B;
+    --gold: #C9A24B;
+    --text: #2C2C2A;
+    --muted: #6b6a66;
+    --border: #e7e4dc;
+    --bg: #f7f5f0;
+    --green: #2E7D46;
+    --red: #B3261E;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: #fff;
+  }
+  .topbar {
+    background: var(--navy);
+    color: #fff;
+    padding: 18px 20px;
+  }
+  .topbar .brand {
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    opacity: 0.85;
+    margin: 0 0 4px;
+  }
+  .topbar .brand b { color: var(--gold); font-weight: 600; }
+  .topbar h1 {
+    font-size: 20px;
+    margin: 0;
+    font-weight: 600;
+  }
+  .content { padding: 22px 20px; }
+  .row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .row b { color: var(--text); font-weight: 600; }
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 18px 0;
+  }
+  .summary {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-top: 8px;
+  }
+  .summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 15px;
+    padding: 7px 0;
+  }
+  .summary-line .label { color: var(--muted); }
+  .summary-line .value { font-weight: 600; }
+  .value.income { color: var(--green); }
+  .value.expense { color: var(--red); }
+  .summary-line.total {
+    border-top: 1px solid var(--border);
+    margin-top: 6px;
+    padding-top: 14px;
+    font-size: 18px;
+  }
+  .summary-line.total .label { color: var(--navy); font-weight: 600; }
+  .summary-line.total .value { font-size: 20px; }
+  .note {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 16px;
+    line-height: 1.5;
+  }
+  .state-msg {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="topbar"><p class="brand">Optimus <b>Estate</b></p><h1>Загрузка…</h1></div>
+</div>
+
+<script>
+async function init() {
+  const app = document.getElementById('app');
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+
+  function showMessage(html) {
+    app.innerHTML = '<div class="topbar"><p class="brand">Optimus <b>Estate</b></p><h1>Отчёт</h1></div>' +
+      '<div class="state-msg">' + html + '</div>';
+  }
+
+  if (!id) {
+    showMessage('Ссылка неполная — не указан объект.');
+    return;
+  }
+
+  let data;
+  try {
+    const res = await fetch('rental-report.json');
+    data = await res.json();
+  } catch (e) {
+    showMessage('Не удалось загрузить данные отчёта.');
+    return;
+  }
+
+  const obj = data.find(o => o.id === id);
+  if (!obj) {
+    showMessage('Объект не найден.');
+    return;
+  }
+
+  function fmt(n) {
+    const num = Number(n) || 0;
+    return num.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' €';
+  }
+
+  const today = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const balance = Number(obj.balance) || 0;
+  const balanceClass = balance < 0 ? 'expense' : 'income';
+
+  app.innerHTML =
+    '<div class="topbar">' +
+      '<p class="brand">Optimus <b>Estate</b></p>' +
+      '<h1>' + (obj.title || 'Объект') + '</h1>' +
+    '</div>' +
+    '<div class="content">' +
+      (obj.owner ? '<div class="row"><span>Собственник</span><b>' + obj.owner + '</b></div>' : '') +
+      '<div class="row"><span>Отчёт на дату</span><b>' + today + '</b></div>' +
+      '<div class="summary">' +
+        '<div class="summary-line"><span class="label">Доход от аренды (причитается вам)</span><span class="value income">+' + fmt(obj.totalToOwner) + '</span></div>' +
+        '<div class="summary-line"><span class="label">Расходы (счета, налоги)</span><span class="value expense">-' + fmt(obj.totalExpenses) + '</span></div>' +
+        '<div class="summary-line total"><span class="label">Остаток</span><span class="value ' + balanceClass + '">' + fmt(balance) + '</span></div>' +
+      '</div>' +
+      '<p class="note">Отчёт сформирован автоматически на основе данных бронирований и расходов по объекту. При вопросах обращайтесь к вашему менеджеру Optimus Estate.</p>' +
+    '</div>';
+}
+init();
+</script>
+</body>
+</html>
