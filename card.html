@@ -166,49 +166,14 @@ async function init() {
 
   document.getElementById('copy-btn').addEventListener('click', function () {
     const btn = this;
-    function done(label) {
-      btn.textContent = label;
+    navigator.clipboard.writeText(fullText).then(function () {
+      btn.textContent = 'Скопировано';
       setTimeout(function () { btn.textContent = 'Скопировать текст'; }, 1500);
-    }
-    function textOnly() {
-      navigator.clipboard.writeText(fullText).then(function () {
-        done('Скопировано');
-      }).catch(function () {
-        done('Не удалось скопировать');
-      });
-    }
-    if (obj.photo && navigator.clipboard && window.ClipboardItem) {
-      fetch(obj.photo)
-        .then(function (res) { return res.blob(); })
-        .then(function (blob) {
-          return new Promise(function (resolve) {
-            const img = new Image();
-            img.onload = function () {
-              const canvas = document.createElement('canvas');
-              canvas.width = img.naturalWidth;
-              canvas.height = img.naturalHeight;
-              canvas.getContext('2d').drawImage(img, 0, 0);
-              canvas.toBlob(resolve, 'image/png');
-            };
-            img.onerror = function () { resolve(null); };
-            img.src = URL.createObjectURL(blob);
-          });
-        })
-        .then(function (pngBlob) {
-          if (!pngBlob) { return textOnly(); }
-          const item = new ClipboardItem({
-            'image/png': pngBlob,
-            'text/plain': new Blob([fullText], { type: 'text/plain' })
-          });
-          navigator.clipboard.write([item]).then(function () {
-            done('Скопировано (фото + текст)');
-          }).catch(textOnly);
-        })
-        .catch(textOnly);
-    } else {
-      textOnly();
-    }
+    }).catch(function () {
+      btn.textContent = 'Не удалось скопировать';
+    });
   });
+
 }
 init();
 </script>
